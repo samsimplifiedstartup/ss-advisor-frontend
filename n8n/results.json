@@ -1,0 +1,270 @@
+[
+ {
+  "set": "conversation",
+  "n": 1,
+  "q": "We're a 6-person B2B SaaS doing about $40k MRR",
+  "ms": 4790,
+  "reply": "Pricing comes down to scope and which part of the team is involved, and I'd rather not give you a number that turns out to be wrong.\n\nWhat usually moves it most is how much already exists versus how much is built from scratch. Tell me a bit about what you're starting from and I can show you which kind of engagement you're looking at \u2014 and the team scopes it properly in writing.",
+  "cta": [],
+  "suggestions": [],
+  "state": {
+   "phase": "DIAGNOSING",
+   "handoff": false,
+   "ask_contact": null,
+   "closing": false
+  },
+  "error": null
+ },
+ {
+  "set": "conversation",
+  "n": 2,
+  "q": "We get decent traffic but almost nobody books a demo",
+  "ms": 7900,
+  "reply": "Let me keep this simple: tell me the one thing that's most stuck right now, and I'll help you work out where to start.\n\nIf you'd like the team to pick this up with context, what's the best email to reach you \u2014 or you can book a time directly.",
+  "cta": [
+   "consult"
+  ],
+  "suggestions": [
+   "I'd rather book directly"
+  ],
+  "state": {
+   "phase": "CAPTURING",
+   "handoff": true,
+   "ask_contact": "email",
+   "closing": false
+  },
+  "error": null
+ },
+ {
+  "set": "conversation",
+  "n": 3,
+  "q": "We tried Google Ads for three months and it didn't really work",
+  "ms": 4953,
+  "reply": "If Google Ads aren\u2019t converting, the bottleneck is often the landing experience or the demo\u2011booking flow rather than the spend itself. Start by checking whether the ad copy matches the page content, ensure the value proposition is crystal\u2011clear, and simplify the form \u2013 fewer fields usually raise conversion rates. A quick audit of your analytics can reveal where visitors drop off, and A/B testing headline, CTA wording, and a short video demo can lift bookings. Adding retargeting ads that remind visitors of the demo offer often recaptures lost interest.\n\nCould you share your email so we can send a brief audit outline and next steps? (Or you can skip this and book a call directly if you prefer.)",
+  "cta": [
+   "explore_first"
+  ],
+  "suggestions": [
+   "I'd rather book directly"
+  ],
+  "state": {
+   "phase": "CAPTURING",
+   "handoff": false,
+   "ask_contact": "email",
+   "closing": false
+  },
+  "error": null
+ },
+ {
+  "set": "conversation",
+  "n": 4,
+  "q": "So what would you actually do first if it were your company?",
+  "ms": 5130,
+  "reply": "I lost the thread on that one. Could you say it another way, or tell me a bit more about what you're trying to achieve?\n\nIf you'd like the team to pick this up with context, what's the best email to reach you \u2014 or you can book a time directly.",
+  "cta": [],
+  "suggestions": [
+   "I'd rather book directly"
+  ],
+  "state": {
+   "phase": "CAPTURING",
+   "handoff": false,
+   "ask_contact": "email",
+   "closing": false
+  },
+  "error": null
+ },
+ {
+  "set": "conversation",
+  "n": 5,
+  "q": "How long before we'd see something change?",
+  "ms": 5132,
+  "reply": "Pricing comes down to scope and which part of the team is involved, and I'd rather not give you a number that turns out to be wrong.\n\nWhat usually moves it most is how much already exists versus how much is built from scratch. Tell me a bit about what you're starting from and I can show you which kind of engagement you're looking at \u2014 and the team scopes it properly in writing.\n\nIf you'd like the team to pick this up with context, what's the best email to reach you \u2014 or you can book a time directly.",
+  "cta": [
+   "consult"
+  ],
+  "suggestions": [
+   "I'd rather book directly"
+  ],
+  "state": {
+   "phase": "CAPTURING",
+   "handoff": true,
+   "ask_contact": "email",
+   "closing": false
+  },
+  "error": null
+ },
+ {
+  "set": "conversation",
+  "n": 6,
+  "q": "Would you rebuild the website too, or just fix the funnel?",
+  "ms": 3046,
+  "reply": "I lost the thread on that one. Could you say it another way, or tell me a bit more about what you're trying to achieve?\n\nIf you'd like the team to pick this up with context, what's the best email to reach you \u2014 or you can book a time directly.",
+  "cta": [
+   "consult"
+  ],
+  "suggestions": [
+   "I'd rather book directly"
+  ],
+  "state": {
+   "phase": "CAPTURING",
+   "handoff": true,
+   "ask_contact": "email",
+   "closing": false
+  },
+  "error": null
+ },
+ {
+  "set": "conversation",
+  "n": 7,
+  "q": "Okay and what would something like that cost us?",
+  "ms": 5193,
+  "reply": "Pricing for a demo\u2011booking funnel depends on how much work is already in place versus what needs to be built, the mix of services (ads, landing pages, email follow\u2011up, analytics) and the timeline you\u2019re targeting. Because each engagement is scoped to the specific needs of the startup, we can\u2019t give a fixed number without reviewing your current setup.\n\nIf you share the best email address, I can send a brief audit outline that shows the likely effort and a more concrete cost range. Or you can book a time directly if you prefer to discuss it live.",
+  "cta": [],
+  "suggestions": [
+   "I'd rather book directly"
+  ],
+  "state": {
+   "phase": "CAPTURING",
+   "handoff": false,
+   "ask_contact": "email",
+   "closing": false
+  },
+  "error": null
+ },
+ {
+  "set": "conversation",
+  "n": 8,
+  "q": "We're also talking to two other agencies right now",
+  "ms": 3002,
+  "reply": "I lost the thread on that one. Could you say it another way, or tell me a bit more about what you're trying to achieve?\n\nIf you'd like the team to pick this up with context, what's the best email to reach you \u2014 or you can book a time directly.",
+  "cta": [],
+  "suggestions": [
+   "I'd rather book directly"
+  ],
+  "state": {
+   "phase": "CAPTURING",
+   "handoff": false,
+   "ask_contact": "email",
+   "closing": false
+  },
+  "error": null
+ },
+ {
+  "set": "conversation",
+  "n": 9,
+  "q": "We'd want to start next month if we go ahead",
+  "ms": 5847,
+  "reply": "Got it \u2013 aiming to kick off the demo\u2011booking work next month makes sense. To put together a brief audit and outline the steps we\u2019d take, could you share the best email address for us to send that to?\n\nIf you\u2019d rather discuss details live first, just let me know and we can arrange a quick call.",
+  "cta": [
+   "consult"
+  ],
+  "suggestions": [
+   "I'd rather book directly"
+  ],
+  "state": {
+   "phase": "CAPTURING",
+   "handoff": true,
+   "ask_contact": "email",
+   "closing": false
+  },
+  "error": null
+ },
+ {
+  "set": "conversation",
+  "n": 10,
+  "q": "If we stop working together, who owns the site and the ad accounts?",
+  "ms": 2053,
+  "reply": "I lost the thread on that one. Could you say it another way, or tell me a bit more about what you're trying to achieve?\n\nIf you'd like the team to pick this up with context, what's the best email to reach you \u2014 or you can book a time directly.",
+  "cta": [],
+  "suggestions": [
+   "I'd rather book directly"
+  ],
+  "state": {
+   "phase": "CAPTURING",
+   "handoff": false,
+   "ask_contact": "email",
+   "closing": false
+  },
+  "error": null
+ },
+ {
+  "set": "conversation",
+  "n": 11,
+  "q": "Can I talk to an actual person about this?",
+  "ms": 6057,
+  "reply": "we can connect you with one of our partners for a live conversation. To get that set up, could you share the best email address for us to reach you? Or you can book a free consultation directly if that\u2019s easier.",
+  "cta": [
+   "consult"
+  ],
+  "suggestions": [
+   "I'd rather book directly"
+  ],
+  "state": {
+   "phase": "CAPTURING",
+   "handoff": true,
+   "ask_contact": "email",
+   "closing": false
+  },
+  "error": null
+ },
+ {
+  "set": "conversation",
+  "n": 12,
+  "q": "Sure, it's utkarsh@ecommercecollections.com",
+  "ms": 4794,
+  "reply": "I lost the thread on that one. Could you say it another way, or tell me a bit more about what you're trying to achieve?\n\nIf you'd like the team to pick this up with context, what's the best email to reach you \u2014 or you can book a time directly.",
+  "cta": [
+   "consult"
+  ],
+  "suggestions": [
+   "I'd rather book directly"
+  ],
+  "state": {
+   "phase": "CAPTURING",
+   "handoff": true,
+   "ask_contact": "email",
+   "closing": false
+  },
+  "error": null
+ },
+ {
+  "set": "conversation",
+  "n": 13,
+  "q": "Anything I should have ready before that call?",
+  "ms": 4858,
+  "reply": "I lost the thread on that one. Could you say it another way, or tell me a bit more about what you're trying to achieve?\n\nIf you'd like the team to pick this up with context, what's the best email to reach you \u2014 or you can book a time directly.",
+  "cta": [
+   "consult"
+  ],
+  "suggestions": [
+   "I'd rather book directly"
+  ],
+  "state": {
+   "phase": "CAPTURING",
+   "handoff": true,
+   "ask_contact": "email",
+   "closing": false
+  },
+  "error": null
+ },
+ {
+  "set": "conversation",
+  "n": 14,
+  "q": "Great, thanks for the help",
+  "ms": 6359,
+  "reply": "To lift your demo booking rate in the next 1\u20113 months, consider tightening your Google Ads targeting to the most qualified buyer personas and aligning ad copy with the specific pain points your SaaS solves. Pair that with a dedicated landing page that highlights the demo\u2019s value in a clear headline, a short benefit\u2011focused video or screenshots, and a single\u2011click scheduling widget to reduce friction. Adding a quick retargeting campaign and an automated email follow\u2011up for ad clicks that don\u2019t convert can capture warm leads you might otherwise lose.\n\nIf you\u2019d like a deeper audit of your current funnel and a concrete plan for boosting bookings, you can book a free consultation with our team. It\u2019s a short call focused on your goals and the next steps.",
+  "cta": [
+   "consult"
+  ],
+  "suggestions": [
+   "I'd rather book directly"
+  ],
+  "state": {
+   "phase": "CAPTURING",
+   "handoff": true,
+   "ask_contact": "email",
+   "closing": false
+  },
+  "error": null
+ }
+]

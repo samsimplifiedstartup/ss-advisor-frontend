@@ -1,0 +1,23 @@
+<state>
+{{ $json.state_summary }}
+</state>
+
+<questions>
+{{ ($json.questions || []).length ? $json.questions.map((q, i) => (i + 1) + '. ' + q).join('\n') : 'none — they are describing their situation or replying to us' }}
+</questions>
+
+<kb support="{{ $json.support }}">
+{{ $json.kb_context || 'nothing retrieved for this message' }}
+</kb>
+
+<recent_turns>
+{{ $json.recent_turns || 'none' }}
+</recent_turns>
+
+<user_message>
+{{ $json.payload.message }}
+</user_message>
+
+<turn_instructions>
+phase={{ $json.S.phase }}; intent={{ $json.intent }}; narrow_first={{ $json.narrow_first }}; may_ask_question={{ $json.may_ask_question }}; ask_at_most_one_question=true; ask_contact={{ $json.ask_contact || 'none' }}; allowed_cta_intents={{ JSON.stringify($json.allowed_cta) }}; pricing_mode={{ $json.pricing_mode }}; kb_empty={{ $json.kb_empty }}; lead_write_ok={{ $json.S.flags.lead_ok }}; already_asked={{ JSON.stringify($json.S.questions) }}; do_not_ask_again={{ JSON.stringify($json.known_attrs) }}
+</turn_instructions>

@@ -1,0 +1,7 @@
+# Local config. The static page cannot read a .env anyway — the webhook URL is set
+# directly in index.html / ss-advisor.js — so this file is a note to ourselves, and
+# the n8n endpoint does not belong in a public repo.
+.env
+
+.DS_Store
+node_modules/

@@ -1,0 +1,21 @@
+<!-- Simplified Startup AI Advisor — paste before </body> on every page.
+     1. Upload ss-advisor.css and ss-advisor.js to /assets/advisor/ (or your CDN path).
+     2. data-endpoint is already set to the production n8n Webhook URL — never swap in a test URL.
+     3. Remove the existing placeholder widget markup ("// UI placeholder — wire this to your AI Advisor endpoint on deploy.").
+     4. Any existing "Talk to AI Advisor" / "Try the AI Advisor" buttons open the panel if you add data-ss-advisor-open to them
+        (or point their href to "#ai-advisor"). -->
+
+<link rel="stylesheet" href="/assets/advisor/ss-advisor.css">
+<script src="/assets/advisor/ss-advisor.js"
+        data-endpoint="https://n8n.notaiagent.com/webhook/advisor"
+        data-site="https://simplifiedstartup.com"
+        defer></script>
+
+<!-- Optional: match brand colours without editing the CSS file.
+<style>
+  .ssa-root { --ssa-accent: #YOUR_BRAND_HEX; --ssa-font: "Your Site Font"; }
+</style>
+-->
+
+<!-- Recommended Content-Security-Policy addition for the site (adjust the connect-src host to your n8n domain):
+     connect-src 'self' https://automations.YOUR-DOMAIN; -->
