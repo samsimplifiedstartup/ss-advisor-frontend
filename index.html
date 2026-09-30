@@ -1,623 +1,227 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Simplified Startup — AI Advisor</title>
-
-<!-- =====================================================================
-     SIMPLIFIED STARTUP — AI ADVISOR (single file: HTML + CSS + JS)
-     Open this file directly in a browser, or in Cursor, to work on it.
-
-     CONFIG — the only thing you normally change:
-       endpoint : your n8n production webhook URL (placeholder until you deploy)
-       site     : your site origin; CTA links are refused if they point anywhere else
-       mock     : true = canned replies for local design work, false = live backend
-       theme    : "" (light) or "dark"
-
-     To ship on simplifiedstartup.com, use frontend/embed-snippet.html with the
-     separate ss-advisor.css / ss-advisor.js instead of pasting this whole file.
-     ===================================================================== -->
-<script>
-  window.SS_ADVISOR_CONFIG = {
-    endpoint: "https://web-production-c4d14.up.railway.app/webhook/advisor-1",
-    site: "https://simplifiedstartup.com",
-    mock: false,
-    theme: ""
-  };
-</script>
-
 <style>
-/* ---------- test page chrome (delete when embedding) ---------- */
-body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #15181d; background: #fafafa; }
-main { padding: 28px 32px; }
-.wordmark { font-size: 15px; font-weight: 600; letter-spacing: -.01em; color: #15181d; }
-
-/* ---------- advisor widget styles ---------- */
-/* Simplified Startup — AI Advisor chatbox
-   Scope: everything lives under .ssa-root so it cannot collide with site styles.
-   Tokens: override on .ssa-root from the site's stylesheet to match brand colours. */
-
-.ssa-root {
-  --ssa-paper: #ffffff;
-  --ssa-ink: #15181d;
-  --ssa-ink-2: #454c57;
-  --ssa-muted: #6b7280;
-  --ssa-line: #e5e7eb;
-  --ssa-surface: #f4f5f7;
-  --ssa-accent: #0f3d6e;          /* launcher + primary CTA only */
-  --ssa-accent-ink: #ffffff;
-  --ssa-visitor: #eef1f6;         /* visitor message pill */
-  --ssa-focus: #0f3d6e;
-  --ssa-danger: #9a3412;
-  --ssa-radius: 14px;
-  --ssa-font: inherit;            /* inherits the site typeface by design */
-  --ssa-shadow: 0 18px 50px -12px rgba(15, 24, 40, .28), 0 2px 6px rgba(15, 24, 40, .08);
-  --ssa-z: 2147483000;
-
-  font-family: var(--ssa-font), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  font-size: 15px;
-  line-height: 1.5;
-  color: var(--ssa-ink);
-  position: fixed;
-  inset: auto 20px 20px auto;
-  z-index: var(--ssa-z);
-  -webkit-font-smoothing: antialiased;
-}
-.ssa-root *, .ssa-root *::before, .ssa-root *::after { box-sizing: border-box; }
-.ssa-root button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
-.ssa-root :focus-visible { outline: 2px solid var(--ssa-focus); outline-offset: 2px; border-radius: 6px; }
-
-/* ---------- Launcher ---------- */
-.ssa-root .ssa-launcher {
-  display: flex; align-items: center; gap: 14px;
-  padding: 16px 26px 16px 18px;
-  border-radius: 999px;
-  background: var(--ssa-accent); color: var(--ssa-accent-ink);
-  box-shadow: 0 12px 32px rgba(15, 24, 29, .28), 0 2px 6px rgba(15, 24, 29, .18);
-  transition: transform .18s ease, opacity .18s ease, box-shadow .18s ease;
-  text-align: left;
-}
-.ssa-root .ssa-launcher:hover { transform: translateY(-2px); box-shadow: 0 18px 40px rgba(15, 24, 29, .34), 0 3px 8px rgba(15, 24, 29, .2); }
-.ssa-root .ssa-launcher[aria-expanded="true"] { opacity: 0; pointer-events: none; transform: translateY(8px) scale(.96); }
-.ssa-root .ssa-launcher-mark {
-  width: 42px; height: 42px; border-radius: 50%; flex: none;
-  display: grid; place-items: center;
-  background: rgba(255,255,255,.18);
-}
-.ssa-root .ssa-launcher-mark svg { width: 24px; height: 24px; }
-.ssa-root .ssa-launcher-text { display: flex; flex-direction: column; line-height: 1.25; gap: 2px; }
-.ssa-root .ssa-launcher-text strong { font-weight: 650; font-size: 17px; letter-spacing: -.01em; }
-.ssa-root .ssa-launcher-text span { font-size: 13.5px; opacity: .82; }
-
-/* A quiet pulse the first few seconds, so the button is noticed without nagging. */
-@keyframes ssa-nudge { 0%, 88%, 100% { transform: translateY(0); } 93% { transform: translateY(-4px); } }
-.ssa-root .ssa-launcher[data-nudge="true"] { animation: ssa-nudge 4.5s ease-in-out 3; }
-.ssa-root .ssa-launcher[data-nudge="true"]:hover { animation: none; }
-@media (prefers-reduced-motion: reduce) { .ssa-root .ssa-launcher[data-nudge="true"] { animation: none; } }
-
-/* ---------- Panel ---------- */
-.ssa-panel {
-  position: absolute; right: 0; bottom: 0;
-  width: 400px; max-width: calc(100vw - 40px);
-  height: 660px; max-height: calc(100vh - 40px);
-  display: flex; flex-direction: column;
-  background: var(--ssa-paper);
-  border: 1px solid var(--ssa-line);
-  border-radius: var(--ssa-radius);
-  box-shadow: var(--ssa-shadow);
-  overflow: hidden;
-  transform-origin: bottom right;
-  opacity: 0; transform: translateY(12px) scale(.98); pointer-events: none;
-  transition: opacity .2s ease, transform .22s cubic-bezier(.2,.8,.2,1);
-}
-.ssa-panel[data-open="true"] { opacity: 1; transform: none; pointer-events: auto; }
-
-.ssa-head {
-  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
-  padding: 16px 16px 12px 20px;
-  border-bottom: 1px solid var(--ssa-line);
-}
-.ssa-head h2 { margin: 0; font-size: 15px; font-weight: 600; line-height: 1.3; }
-.ssa-head p { margin: 2px 0 0; font-size: 12.5px; color: var(--ssa-muted); }
-.ssa-head-actions { display: flex; gap: 4px; flex: none; }
-.ssa-icon-btn {
-  width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; color: var(--ssa-ink-2);
-}
-.ssa-icon-btn:hover { background: var(--ssa-surface); }
-.ssa-icon-btn svg { width: 18px; height: 18px; }
-
-/* ---------- Thread ---------- */
-.ssa-thread {
-  flex: 1; overflow-y: auto; padding: 20px 20px 8px;
-  scroll-behavior: smooth; overscroll-behavior: contain;
-}
-@media (prefers-reduced-motion: reduce) { .ssa-thread { scroll-behavior: auto; } }
-
-.ssa-opening { padding: 8px 0 12px; }
-.ssa-opening h3 {
-  margin: 0 0 10px; font-size: 24px; line-height: 1.2; font-weight: 600; letter-spacing: -.01em;
-  max-width: 18ch;                                   /* the one large element */
-}
-.ssa-opening p { margin: 0 0 18px; color: var(--ssa-ink-2); max-width: 34ch; }
-
-.ssa-quick { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
-.ssa-quick button {
-  padding: 8px 12px; border: 1px solid var(--ssa-line); border-radius: 999px;
-  font-size: 13.5px; color: var(--ssa-ink); background: var(--ssa-paper); text-align: left;
-  transition: background .12s ease, border-color .12s ease;
-}
-.ssa-quick button:hover { background: var(--ssa-surface); border-color: #d6d9df; }
-
-.ssa-msg { margin: 0 0 18px; animation: ssa-in .18s ease both; }
-@keyframes ssa-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .ssa-msg { animation: none; } }
-
-.ssa-msg--visitor { display: flex; justify-content: flex-end; }
-.ssa-msg--visitor .ssa-bubble {
-  max-width: 85%; padding: 9px 13px; border-radius: 16px 16px 4px 16px;
-  background: var(--ssa-visitor); color: var(--ssa-ink); white-space: pre-wrap; word-wrap: break-word;
-}
-.ssa-msg--advisor {
-  padding-left: 14px; border-left: 2px solid var(--ssa-line);  /* rule, not a bubble: reads as a person writing */
-  max-width: 92%;
-}
-.ssa-msg--advisor p { margin: 0 0 10px; }
-.ssa-msg--advisor p:last-child { margin-bottom: 0; }
-.ssa-msg--advisor ul { margin: 6px 0 10px; padding-left: 18px; }
-.ssa-msg--advisor li { margin: 2px 0; }
-.ssa-msg--advisor strong { font-weight: 600; }
-.ssa-msg--system { font-size: 13px; color: var(--ssa-muted); padding-left: 14px; }
-.ssa-msg--error { color: var(--ssa-danger); }
-
-.ssa-typing { display: inline-flex; gap: 4px; padding: 6px 0; }
-.ssa-typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--ssa-muted); opacity: .4; animation: ssa-dot 1.1s infinite ease-in-out; }
-.ssa-typing i:nth-child(2) { animation-delay: .15s; } .ssa-typing i:nth-child(3) { animation-delay: .3s; }
-@keyframes ssa-dot { 0%, 80%, 100% { opacity: .35; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-2px); } }
-@media (prefers-reduced-motion: reduce) { .ssa-typing i { animation: none; opacity: .7; } }
-
-/* CTA + suggestion rows */
-.ssa-ctas { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0 14px; }
-.ssa-cta {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 9px 14px; border-radius: 10px; font-size: 13.5px; font-weight: 500;
-  border: 1px solid var(--ssa-line); background: var(--ssa-paper); color: var(--ssa-ink); text-decoration: none;
-}
-.ssa-cta:hover { background: var(--ssa-surface); }
-.ssa-cta--primary { background: var(--ssa-accent); color: var(--ssa-accent-ink); border-color: var(--ssa-accent); }
-.ssa-cta--primary:hover { background: var(--ssa-accent); filter: brightness(1.08); }
-.ssa-cta svg { width: 13px; height: 13px; opacity: .75; }
-
-.ssa-suggest { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0 14px; }
-.ssa-suggest button {
-  padding: 6px 11px; border-radius: 999px; font-size: 13px; color: var(--ssa-ink-2);
-  border: 1px dashed #cfd3da; background: var(--ssa-paper);
-}
-.ssa-suggest button:hover { background: var(--ssa-surface); color: var(--ssa-ink); }
-.ssa-suggest button.ssa-escape { border-style: dashed; opacity: .85; }
-
-.ssa-retry { display: inline-flex; gap: 8px; margin-top: 8px; }
-
-/* ---------- Composer ---------- */
-.ssa-composer { border-top: 1px solid var(--ssa-line); padding: 10px 12px 8px; background: var(--ssa-paper); }
-.ssa-inputrow {
-  display: flex; align-items: flex-end; gap: 8px;
-  border: 1px solid var(--ssa-line); border-radius: 12px; padding: 6px 6px 6px 12px; background: var(--ssa-paper);
-}
-.ssa-inputrow:focus-within { border-color: #b8c3d4; box-shadow: 0 0 0 3px rgba(15, 61, 110, .08); }
-.ssa-input {
-  flex: 1; resize: none; border: 0; outline: 0; background: transparent; font: inherit; color: var(--ssa-ink);
-  max-height: 120px; min-height: 24px; line-height: 1.45; padding: 4px 0;
-}
-.ssa-input::placeholder { color: var(--ssa-muted); }
-.ssa-send {
-  width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center;
-  background: var(--ssa-ink); color: #fff; flex: none; transition: opacity .12s ease;
-}
-.ssa-send:disabled { opacity: .35; cursor: default; }
-.ssa-send svg { width: 16px; height: 16px; }
-.ssa-foot { margin: 8px 4px 0; font-size: 11.5px; color: var(--ssa-muted); display: flex; justify-content: space-between; gap: 8px; }
-.ssa-foot a { color: inherit; }
-.ssa-count { font-variant-numeric: tabular-nums; }
-.ssa-count[data-over="true"] { color: var(--ssa-danger); }
-
-/* inline confirm (reset) */
-.ssa-confirm { display: flex; gap: 8px; align-items: center; padding: 8px 20px; font-size: 13px; color: var(--ssa-ink-2); border-bottom: 1px solid var(--ssa-line); background: var(--ssa-surface); }
-.ssa-confirm button { padding: 4px 10px; border-radius: 6px; border: 1px solid var(--ssa-line); background: var(--ssa-paper); font-size: 12.5px; }
-.ssa-confirm button.ssa-yes { background: var(--ssa-ink); color: #fff; border-color: var(--ssa-ink); }
-
-.ssa-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-
-/* ---------- Mobile ---------- */
-@media (max-width: 640px) {
-  .ssa-root { inset: auto 12px 12px auto; }
-  .ssa-root .ssa-launcher { padding: 13px 20px 13px 13px; gap: 11px; }
-  .ssa-root .ssa-launcher-mark { width: 36px; height: 36px; }
-  .ssa-root .ssa-launcher-mark svg { width: 21px; height: 21px; }
-  .ssa-root .ssa-launcher-text strong { font-size: 15.5px; }
-  .ssa-root .ssa-launcher-text span { display: none; }
-  .ssa-panel {
-    position: fixed; inset: 0; width: auto; max-width: none; height: 100dvh; max-height: none;
-    border-radius: 0; border: 0;
-  }
-  .ssa-thread { padding: 16px 16px 8px; }
-  .ssa-opening h3 { font-size: 22px; }
-  .ssa-composer { padding-bottom: max(8px, env(safe-area-inset-bottom)); }
-}
-
-/* ---------- Dark scheme of the host site (opt-in: add data-theme="dark" on .ssa-root) ---------- */
-.ssa-root[data-theme="dark"] {
-  --ssa-paper: #14171c; --ssa-ink: #eef0f3; --ssa-ink-2: #c3c8d1; --ssa-muted: #8b93a1;
-  --ssa-line: #2a2f37; --ssa-surface: #1c2027; --ssa-visitor: #232932; --ssa-accent: #6ea0e6; --ssa-accent-ink: #0c1424;
-}
-.ssa-root[data-theme="dark"] .ssa-send { background: #eef0f3; color: #14171c; }
-
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;display:flex;align-items:center;justify-content:center;min-height:100vh}
+.widget{width:420px;height:700px;background:#fff;border-radius:20px;box-shadow:0 8px 48px rgba(0,0,0,.12);display:flex;flex-direction:column;overflow:hidden}
+.header{padding:18px 20px 16px;border-bottom:1px solid #efefed;display:flex;align-items:center;gap:12px}
+.logo{width:36px;height:36px;background:#1a1a1a;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo svg{width:18px;height:18px;fill:#fff}
+.header-text h2{font-size:15px;font-weight:600;color:#1a1a1a;line-height:1.2}
+.header-text p{font-size:12px;color:#888;margin-top:2px}
+.reset-btn{margin-left:auto;background:none;border:none;cursor:pointer;color:#bbb;padding:4px;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.reset-btn:hover{color:#888;background:#f5f5f5}
+.disclosure{background:#fafaf8;border-bottom:1px solid #efefed;padding:8px 20px;display:flex;gap:14px;flex-wrap:wrap}
+.disclosure span{font-size:10.5px;color:#aaa;display:flex;align-items:center;gap:4px}
+.disclosure span::before{content:'·';color:#ccc}
+.messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth}
+.messages::-webkit-scrollbar{width:3px}
+.messages::-webkit-scrollbar-thumb{background:#e0e0e0;border-radius:3px}
+.msg-bot{align-self:flex-start;max-width:88%}
+.msg-user{align-self:flex-end;max-width:82%}
+.bubble-bot{background:#f5f4f0;color:#1a1a1a;padding:11px 14px;border-radius:4px 16px 16px 16px;font-size:14px;line-height:1.55;white-space:pre-wrap}
+.bubble-user{background:#1a1a1a;color:#fff;padding:11px 14px;border-radius:16px 16px 4px 16px;font-size:14px;line-height:1.55}
+.typing{align-self:flex-start;background:#f5f4f0;padding:12px 16px;border-radius:4px 16px 16px 16px;display:flex;gap:5px;align-items:center}
+.typing span{width:6px;height:6px;border-radius:50%;background:#bbb;animation:bounce 1.1s infinite}
+.typing span:nth-child(2){animation-delay:.18s}
+.typing span:nth-child(3){animation-delay:.36s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px);background:#888}}
+.quick-replies{display:flex;flex-direction:column;gap:7px;margin-top:4px}
+.qr-btn{background:#fff;border:1px solid #e8e8e4;color:#333;padding:9px 14px;border-radius:10px;font-size:13px;text-align:left;cursor:pointer;transition:all .15s;line-height:1.4}
+.qr-btn:hover{background:#f5f4f0;border-color:#ccc}
+.cta-card{background:#1a1a1a;color:#fff;padding:14px 16px;border-radius:12px;margin-top:4px}
+.cta-card p{font-size:13px;line-height:1.5;margin-bottom:10px;color:#ccc}
+.cta-btn{display:block;background:#fff;color:#1a1a1a;text-decoration:none;text-align:center;padding:10px;border-radius:8px;font-size:13px;font-weight:600;transition:opacity .15s}
+.cta-btn:hover{opacity:.85}
+.input-area{padding:14px 16px;border-top:1px solid #efefed;display:flex;gap:10px;align-items:center}
+.input-area input{flex:1;background:#f5f4f0;border:none;border-radius:10px;padding:10px 14px;font-size:14px;color:#1a1a1a;outline:none}
+.input-area input::placeholder{color:#aaa}
+.send-btn{background:#1a1a1a;border:none;border-radius:10px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:opacity .15s}
+.send-btn:hover{opacity:.8}
+.send-btn:disabled{opacity:.3;cursor:not-allowed}
+.send-btn svg{width:16px;height:16px;fill:#fff}
+.footer{padding:8px 20px 12px;text-align:center}
+.footer p{font-size:11px;color:#bbb;line-height:1.4}
+.footer a{color:#bbb}
 </style>
 </head>
 <body>
-
-<!-- Bare test page: nothing here but the brand and the advisor itself. -->
-<main>
-  <span class="wordmark">Simplified Startup</span>
-</main>
+<div class="widget">
+  <div class="header">
+    <div class="logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <div class="header-text">
+      <h2>Simplified Startup</h2>
+      <p>AI Advisor · directional advice, instantly</p>
+    </div>
+    <button class="reset-btn" onclick="resetChat()" title="Start over">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+    </button>
+  </div>
+  <div class="disclosure">
+    <span>Automated assistant</span>
+    <span>Conversations may be reviewed</span>
+    <span>General guidance only</span>
+  </div>
+  <div class="messages" id="messages"></div>
+  <div class="input-area">
+    <input type="text" id="msgInput" placeholder="Type what's going on..." disabled />
+    <button class="send-btn" id="sendBtn" disabled onclick="sendMessage()">
+      <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+    </button>
+  </div>
+  <div class="footer"><p>Answers come from Simplified Startup's published information.<br>Nothing here is a quote. <a href="https://simplified-startup-ui.vercel.app" target="_blank">simplifiedstartup.com</a></p></div>
+</div>
 
 <script>
-/* Simplified Startup — AI Advisor chatbox (vanilla JS, no dependencies)
-   Single-file build: configured by window.SS_ADVISOR_CONFIG at the top of this file.
-   Security posture: all server text rendered via textContent + a tiny escaping markdown-lite; links only from server `cta`
-   and only if their host matches data-site. No secrets in this file. */
-(function () {
-  'use strict';
-  if (window.__ssAdvisorLoaded) return; window.__ssAdvisorLoaded = true;
+const BASE = 'https://web-production-c4d14.up.railway.app';
+let sid = null;
+let chipRow = null;   // the currently shown row of tappable options, if any
 
-  // ---------- config ----------
-  var USER = window.SS_ADVISOR_CONFIG || {};
-  var CFG = {
-    endpoint: USER.endpoint || '',
-    site: (USER.site || 'https://simplifiedstartup.com').replace(/\/$/, ''),
-    mock: USER.mock === true,
-    theme: USER.theme || '',
-    maxLen: 1500,
-    timeoutMs: 30000,
-    storageKey: 'ssa.session.v2',
-  };
-  var SITE_HOST = (function () { try { return new URL(CFG.site).host.replace(/^www\./, ''); } catch (e) { return 'simplifiedstartup.com'; } })();
-  var BOOK_URL = CFG.site + '/start-project';
+const msgs = document.getElementById('messages');
+const input = document.getElementById('msgInput');
+const sendBtn = document.getElementById('sendBtn');
 
-  var QUICK = [
-    { id: 'have_idea',        text: "I have an idea and don't know where to start" },
-    { id: 'need_launch',      text: 'I need to launch in the next few months' },
-    { id: 'traffic_no_leads', text: 'We get traffic but almost no leads' },
-    { id: 'marketing_flat',   text: "Our marketing isn't producing pipeline" },
-    { id: 'automate',         text: 'I want to automate something repetitive' },
-    { id: 'unsure',           text: "I'm not sure what I actually need" },
-  ];
+const OPENING_CHIPS = [
+  "I have an idea and don't know where to start",
+  "I need to launch in the next few months",
+  "We get traffic but almost no leads",
+  "Our marketing isn't producing pipeline",
+  "I want to automate something repetitive",
+  "I don't know what to tackle first",
+];
 
-  // ---------- helpers ----------
-  function el(tag, attrs, children) {
-    var n = document.createElement(tag);
-    if (attrs) Object.keys(attrs).forEach(function (k) {
-      if (k === 'class') n.className = attrs[k];
-      else if (k === 'text') n.textContent = attrs[k];
-      else if (k.indexOf('on') === 0) n.addEventListener(k.slice(2), attrs[k]);
-      else n.setAttribute(k, attrs[k]);
-    });
-    (children || []).forEach(function (c) { if (c) n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
-    return n;
+function addBot(text, showCTA) {
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-bot';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble-bot';
+  bubble.textContent = text;
+  wrap.appendChild(bubble);
+  if (showCTA) {
+    const card = document.createElement('div');
+    card.className = 'cta-card';
+    card.innerHTML = `<p>Book a free 30-minute strategy call — you'll leave with a written plan either way.</p><a class="cta-btn" href="https://simplified-startup-ui.vercel.app/#book" target="_blank">Book a free strategy call →</a>`;
+    wrap.appendChild(card);
   }
-  function svg(path) { var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('fill', 'none'); s.setAttribute('stroke', 'currentColor'); s.setAttribute('stroke-width', '2'); s.setAttribute('stroke-linecap', 'round'); s.setAttribute('stroke-linejoin', 'round'); s.setAttribute('aria-hidden', 'true'); var p = document.createElementNS('http://www.w3.org/2000/svg', 'path'); p.setAttribute('d', path); s.appendChild(p); return s; }
-  var ICON = { compass: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.24 5.76-2.83 6.36-6.36 2.83 2.83-6.36 6.36-2.83z', x: 'M18 6 6 18M6 6l12 12', reset: 'M3 12a9 9 0 1 0 3-6.7M3 4v5h5', send: 'M5 12h14M13 6l6 6-6 6', ext: 'M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5' };
-  function uuid() { if (window.crypto && crypto.randomUUID) return crypto.randomUUID(); return 'xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx'.replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16); }); }
-  function safeLink(url) { try { var u = new URL(url); if (u.protocol !== 'https:') return null; if (u.host.replace(/^www\./, '') !== SITE_HOST) return null; return u.href; } catch (e) { return null; } }
-  var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+}
 
-  // Escape-first markdown-lite: paragraphs, "- " bullets, **bold**. Nothing else. No links, no HTML.
-  function renderRich(container, text) {
-    container.textContent = '';
-    var blocks = String(text).split(/\n\s*\n/);
-    blocks.forEach(function (b) {
-      var lines = b.split('\n');
-      var isList = lines.length && lines.every(function (l) { return /^\s*[-•]\s+/.test(l); });
-      if (isList) {
-        var ul = el('ul');
-        lines.forEach(function (l) { var li = el('li'); inline(li, l.replace(/^\s*[-•]\s+/, '')); ul.appendChild(li); });
-        container.appendChild(ul);
-      } else { var p = el('p'); inline(p, b); container.appendChild(p); }
-    });
-    function inline(node, s) {
-      var parts = s.split(/(\*\*[^*]+\*\*)/g);
-      parts.forEach(function (part) {
-        if (/^\*\*[^*]+\*\*$/.test(part)) node.appendChild(el('strong', { text: part.slice(2, -2) }));
-        else if (part) node.appendChild(document.createTextNode(part));
-      });
-    }
-  }
+function addUser(text) {
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-user';
+  wrap.innerHTML = `<div class="bubble-user"></div>`;
+  wrap.querySelector('.bubble-user').textContent = text;
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+}
 
-  // ---------- state ----------
-  var state = {
-    open: false, busy: false, started: false,
-    stateToken: null, lastPayload: null, askContact: null, closing: false,
-    typingEl: null, lastFocus: null,
-  };
-  // The whole conversation state lives in one encrypted token the server issues each turn.
-  // The browser only stores and echoes it; it cannot read or edit what's inside.
-  try { var saved = sessionStorage.getItem(CFG.storageKey); if (saved) { state.stateToken = JSON.parse(saved).t || null; } } catch (e) {}
-  function persist() { try { sessionStorage.setItem(CFG.storageKey, JSON.stringify({ t: state.stateToken })); } catch (e) {} }
+function showTyping() {
+  const t = document.createElement('div');
+  t.className = 'typing'; t.id = 'typing';
+  t.innerHTML = '<span></span><span></span><span></span>';
+  msgs.appendChild(t); msgs.scrollTop = msgs.scrollHeight;
+}
 
-  // ---------- DOM ----------
-  var root = el('div', { class: 'ssa-root' });
-  if (CFG.theme) root.setAttribute('data-theme', CFG.theme);
+function removeTyping() {
+  const t = document.getElementById('typing');
+  if (t) t.remove();
+}
 
-  var launcher = el('button', { class: 'ssa-launcher', type: 'button', 'aria-expanded': 'false', 'aria-controls': 'ssa-panel', 'aria-label': 'Ask the AI Advisor', 'data-nudge': 'true' }, [
-    el('span', { class: 'ssa-launcher-mark' }, [svg(ICON.compass)]),
-    el('span', { class: 'ssa-launcher-text' }, [el('strong', { text: 'Ask the AI Advisor' }), el('span', { text: 'Directional advice, instantly' })]),
-  ]);
+// Remove any lingering option row (on tap, or when the user types their own answer).
+function clearChips() {
+  if (chipRow) { chipRow.remove(); chipRow = null; }
+}
 
-  var titleId = 'ssa-title-' + uuid().slice(0, 6);
-  var thread = el('div', { class: 'ssa-thread', role: 'log', 'aria-live': 'polite', 'aria-relevant': 'additions' });
-  var input = el('textarea', { class: 'ssa-input', rows: '1', placeholder: "Type what's going on…", 'aria-label': 'Your message', maxlength: String(CFG.maxLen + 200) });
-  var sendBtn = el('button', { class: 'ssa-send', type: 'button', 'aria-label': 'Send', disabled: 'true' }, [svg(ICON.send)]);
-  var count = el('span', { class: 'ssa-count', 'aria-hidden': 'true', text: '' });
-  var resetBtn = el('button', { class: 'ssa-icon-btn', type: 'button', 'aria-label': 'Start over' }, [svg(ICON.reset)]);
-  var closeBtn = el('button', { class: 'ssa-icon-btn', type: 'button', 'aria-label': 'Close advisor' }, [svg(ICON.x)]);
-  var confirmBar = null;
-
-  var panel = el('section', { class: 'ssa-panel', id: 'ssa-panel', role: 'dialog', 'aria-modal': 'false', 'aria-labelledby': titleId, 'data-open': 'false' }, [
-    el('header', { class: 'ssa-head' }, [
-      el('div', {}, [el('h2', { id: titleId, text: 'Simplified Startup' }), el('p', { text: 'AI Advisor · directional advice, instantly' })]),
-      el('div', { class: 'ssa-head-actions' }, [resetBtn, closeBtn]),
-    ]),
-    thread,
-    el('div', { class: 'ssa-composer' }, [
-      el('div', { class: 'ssa-inputrow' }, [input, sendBtn]),
-      el('div', { class: 'ssa-foot' }, [
-        el('span', { text: "Answers come from Simplified Startup's published information. Nothing here is a quote." }),
-        count,
-      ]),
-    ]),
-  ]);
-  root.appendChild(launcher); root.appendChild(panel);
-  document.body.appendChild(root);
-
-  // ---------- opening state ----------
-  function renderOpening() {
-    thread.textContent = '';
-    var quick = el('div', { class: 'ssa-quick', role: 'group', 'aria-label': 'Quick starts' });
-    QUICK.forEach(function (q) {
-      quick.appendChild(el('button', { type: 'button', text: q.text, onclick: function () { track('quick_action_clicked', { quick_action_id: q.id }); send(q.text, q.id); } }));
-    });
-    thread.appendChild(el('div', { class: 'ssa-opening' }, [
-      el('h3', { text: 'What are you trying to build, fix, launch, or grow?' }),
-      el('p', { text: "One sentence is enough. I'll help you figure out where our team may fit — and where it doesn't." }),
-      quick,
-    ]));
-  }
-  renderOpening();
-
-  // ---------- messages ----------
-  function addVisitor(text) {
-    var m = el('div', { class: 'ssa-msg ssa-msg--visitor' }, [el('div', { class: 'ssa-bubble', text: text })]);
-    thread.appendChild(m); scrollEnd(); return m;
-  }
-  function addSystem(text, isError) {
-    var m = el('div', { class: 'ssa-msg ssa-msg--system' + (isError ? ' ssa-msg--error' : ''), text: text });
-    thread.appendChild(m); scrollEnd(); return m;
-  }
-  function showTyping() { hideTyping(); state.typingEl = el('div', { class: 'ssa-msg ssa-msg--advisor' }, [el('span', { class: 'ssa-typing', 'aria-label': 'Advisor is typing' }, [el('i'), el('i'), el('i')])]); thread.appendChild(state.typingEl); scrollEnd(); }
-  function hideTyping() { if (state.typingEl) { state.typingEl.remove(); state.typingEl = null; } }
-
-  function addAdvisor(reply, ctas, suggestions, done) {
-    hideTyping();
-    var m = el('div', { class: 'ssa-msg ssa-msg--advisor' });
-    var body = el('div');
-    m.appendChild(body); thread.appendChild(m);
-    var finish = function () {
-      renderRich(body, reply);
-      appendCtas(m, ctas || []);
-      appendSuggestions(m, suggestions || []);
-      scrollEnd(); if (done) done();
-    };
-    if (reducedMotion || reply.length < 40) return finish();
-    // progressive reveal: word chunks, ~ 32 words / 100 ms, so a 120-word answer lands in ~1.5 s
-    var words = reply.split(/(\s+)/), i = 0, shown = '';
-    (function step() {
-      var chunk = 0;
-      while (i < words.length && chunk < 4) { shown += words[i++]; if (!/^\s+$/.test(words[i - 1])) chunk++; }
-      renderRich(body, shown); scrollEnd();
-      if (i < words.length) setTimeout(step, 24); else finish();
-    })();
-  }
-
-  function appendCtas(m, ctas) {
-    var valid = [];
-    ctas.slice(0, 2).forEach(function (c) {
-      if (!c || typeof c.label !== 'string') return;
-      if (c.kind === 'link') { var href = safeLink(c.url); if (href) valid.push({ id: c.id, label: c.label, href: href }); }
-      else if (c.kind === 'suggest' && typeof c.text === 'string') valid.push({ id: c.id, label: c.label, text: c.text });
-    });
-    if (!valid.length) return;
-    var row = el('div', { class: 'ssa-ctas' });
-    valid.forEach(function (c, ix) {
-      if (c.href) {
-        var a = el('a', { class: 'ssa-cta' + (c.id === 'consult' ? ' ssa-cta--primary' : ''), href: c.href, target: '_blank', rel: 'noopener noreferrer', text: c.label, onclick: function () { track('cta_clicked', { cta_id: c.id }); } });
-        a.appendChild(svg(ICON.ext)); row.appendChild(a);
-      } else {
-        row.appendChild(el('button', { class: 'ssa-cta', type: 'button', text: c.label, onclick: function () { track('cta_clicked', { cta_id: c.id }); if (/:\s*$/.test(c.text)) { input.value = c.text; input.focus(); autosize(); } else send(c.text, null); } }));
-      }
-    });
-    m.appendChild(row);
-  }
-  // A chip row can never cover everyone — whoever built it was guessing at who would show up.
-  // So the last chip is an escape, and tapping it must not send "Something else" as the answer:
-  // that tells the advisor nothing and wastes the visitor's turn. It opens the box instead, so
-  // they can say what they actually are in two words.
-  // "Other" alone is an escape; "Other businesses (B2B)" is a real answer, so a bare match on the
-  // word would swallow a legitimate option and leave the visitor staring at an empty box.
-  var ESCAPE = /^\s*(something (else|different)|none of these|neither|not listed|mine('s| is) different)\b|^\s*others?\s*$/i;
-  function appendSuggestions(m, suggestions) {
-    var list = suggestions.filter(function (s) { return typeof s === 'string' && s.trim(); }).slice(0, 5);
-    if (!list.length) return;
-    var row = el('div', { class: 'ssa-suggest' });
-    list.forEach(function (s) {
-      var escape = ESCAPE.test(s);
-      row.appendChild(el('button', {
-        type: 'button', text: s, class: escape ? 'ssa-escape' : '',
-        onclick: function () {
-          if (!escape) return send(s, null);
-          input.value = '';
-          input.placeholder = 'Tell me in a few words…';
-          input.focus({ preventScroll: true });
-          autosize();
-        },
-      }));
-    });
-    m.appendChild(row);
-  }
-  function scrollEnd() { thread.scrollTop = thread.scrollHeight; }
-
-  // ---------- network ----------
-  function clientInfo() {
-    return { page_url: location.href.slice(0, 300), referrer: (document.referrer || '').slice(0, 200), tz: (Intl.DateTimeFormat().resolvedOptions().timeZone || ''), locale: navigator.language || '', device: window.innerWidth < 640 ? 'mobile' : 'desktop' };
-  }
-  function send(text, quickId) {
-    text = String(text || '').trim();
-    if (!text || state.busy) return;
-    if (text.length > CFG.maxLen) { addSystem('That message is a little long for me — could you shorten it to the core of it?', true); return; }
-    if (!state.started) { state.started = true; var op = thread.querySelector('.ssa-opening'); if (op) op.remove(); }
-    addVisitor(text);
-    input.value = ''; autosize(); setBusy(true); showTyping();
-    var payload = { type: 'message', state_token: state.stateToken, turn_client_id: 't_' + uuid().replace(/-/g, '').slice(0, 24), message: text, quick_action_id: quickId || undefined, client: clientInfo() };
-    state.lastPayload = payload;
-    request(payload).then(onReply).catch(onFail);
-  }
-  function request(payload) {
-    if (CFG.mock) return mock(payload);
-    if (!CFG.endpoint) return Promise.reject({ code: 'unavailable' });
-    var ctrl = window.AbortController ? new AbortController() : null;
-    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, CFG.timeoutMs) : null;
-    return fetch(CFG.endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: ctrl ? ctrl.signal : undefined, credentials: 'omit' })
-      .then(function (r) {
-        if (timer) clearTimeout(timer);
-        if (r.status === 429) return r.json().catch(function () { return {}; }).then(function (j) { throw { code: 'rate_limited', retry_after: (j.error && j.error.retry_after) || 20 }; });
-        if (r.status === 400) return r.json().catch(function () { return {}; }).then(function (j) { throw { code: (j.error && j.error.code) || 'bad_request' }; });
-        if (!r.ok) throw { code: 'unavailable' };
-        return r.json();
-      }, function () { if (timer) clearTimeout(timer); throw { code: 'unavailable' }; });
-  }
-  function onReply(data) {
-    setBusy(false);
-    if (!data || typeof data.reply !== 'string') return onFail({ code: 'unavailable' });
-    if (typeof data.state_token === 'string' && data.state_token.length < 16000) { state.stateToken = data.state_token; persist(); }
-    var st = data.state || {};
-    state.askContact = st.ask_contact || null; state.closing = !!st.closing;
-    addAdvisor(data.reply, Array.isArray(data.cta) ? data.cta : [], Array.isArray(data.suggestions) ? data.suggestions : [], function () {
-      if (state.askContact === 'email') { input.setAttribute('type', 'email'); input.placeholder = 'Your email (optional)'; }
-      else if (state.askContact === 'name') { input.placeholder = 'Your name (optional)'; }
-      else { input.placeholder = 'Reply…'; }
-      if (state.open) input.focus({ preventScroll: true });
-    });
-  }
-  function onFail(err) {
-    setBusy(false); hideTyping();
-    var code = (err && err.code) || 'unavailable';
-    if (code === 'rate_limited') { addSystem("You're sending messages faster than I can read them. Give me a moment and try again.", true); return; }
-    if (code === 'message_too_long') { addSystem('That message is a little long for me — could you shorten it to the core of it?', true); return; }
-    if (code === 'bad_request') { addSystem("I couldn't read that. Try rephrasing it.", true); return; }
-    var m = addSystem("I couldn't reach the advisor just now.", true);
-    var row = el('div', { class: 'ssa-retry' }, [
-      el('button', { class: 'ssa-cta', type: 'button', text: 'Try again', onclick: function () { m.remove(); if (state.lastPayload) { setBusy(true); showTyping(); request(state.lastPayload).then(onReply).catch(onFail); } } }),
-      el('a', { class: 'ssa-cta', href: BOOK_URL, target: '_blank', rel: 'noopener noreferrer', text: 'Book a consultation instead' }),
-    ]);
-    m.appendChild(row); scrollEnd();
-  }
-  function setBusy(b) { state.busy = b; sendBtn.disabled = b || !input.value.trim(); input.readOnly = b; }
-
-  // ---------- analytics beacon (no message content) ----------
-  function track(event, props) {
-    if (CFG.mock || !CFG.endpoint) return;
-    var body = JSON.stringify({ type: 'event', state_token: state.stateToken, event: event, props: props || {} });
-    try { if (navigator.sendBeacon) { navigator.sendBeacon(CFG.endpoint, new Blob([body], { type: 'application/json' })); return; } } catch (e) {}
-    try { fetch(CFG.endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body, keepalive: true, credentials: 'omit' }); } catch (e) {}
-  }
-
-  // ---------- open / close / reset ----------
-  function open() {
-    if (state.open) return; state.open = true; state.lastFocus = document.activeElement;
-    panel.setAttribute('data-open', 'true'); launcher.setAttribute('aria-expanded', 'true');
-    track('chat_opened', { page_url: location.pathname });
-    setTimeout(function () { (state.started ? input : thread.querySelector('.ssa-quick button') || input).focus({ preventScroll: true }); }, 60);
-    document.addEventListener('keydown', onKey);
-  }
-  function close() {
-    if (!state.open) return; state.open = false;
-    panel.setAttribute('data-open', 'false'); launcher.setAttribute('aria-expanded', 'false');
-    document.removeEventListener('keydown', onKey);
-    if (state.lastFocus && state.lastFocus.focus) state.lastFocus.focus(); else launcher.focus();
-  }
-  function onKey(e) {
-    if (e.key === 'Escape') { e.preventDefault(); close(); return; }
-    if (e.key === 'Tab') { // focus stays within the panel while open (mobile is full-screen)
-      var f = panel.querySelectorAll('button:not([disabled]), a[href], textarea');
-      if (!f.length) return; var first = f[0], last = f[f.length - 1];
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-    }
-  }
-  function askReset() {
-    if (confirmBar) return;
-    confirmBar = el('div', { class: 'ssa-confirm', role: 'alert' }, [
-      el('span', { text: 'Start a new conversation? This one will be cleared.' }),
-      el('button', { class: 'ssa-yes', type: 'button', text: 'Start over', onclick: doReset }),
-      el('button', { type: 'button', text: 'Keep going', onclick: function () { confirmBar.remove(); confirmBar = null; input.focus(); } }),
-    ]);
-    panel.insertBefore(confirmBar, thread);
-  }
-  function doReset() {
-    track('conversation_reset', {});
-    if (confirmBar) { confirmBar.remove(); confirmBar = null; }
-    state.stateToken = null; state.started = false; state.askContact = null; state.closing = false; state.lastPayload = null; persist();
-    input.value = ''; input.placeholder = "Type what's going on…"; input.removeAttribute('type'); autosize();
-    renderOpening(); thread.scrollTop = 0;
-    var q = thread.querySelector('.ssa-quick button'); if (q) q.focus();
-  }
-
-  // ---------- composer ----------
-  function autosize() { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 120) + 'px'; var n = input.value.length; count.textContent = n > CFG.maxLen * 0.8 ? n + ' / ' + CFG.maxLen : ''; count.setAttribute('data-over', n > CFG.maxLen ? 'true' : 'false'); sendBtn.disabled = state.busy || !input.value.trim() || n > CFG.maxLen; }
-  input.addEventListener('input', autosize);
-  input.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(input.value, null); } });
-  sendBtn.addEventListener('click', function () { send(input.value, null); });
-  launcher.addEventListener('click', open);
-  closeBtn.addEventListener('click', close);
-  resetBtn.addEventListener('click', askReset);
-
-  // Let the site's own "Talk to AI Advisor" / "Try the AI Advisor" buttons open the panel.
-  document.addEventListener('click', function (e) {
-    var t = e.target && e.target.closest && e.target.closest('[data-ss-advisor-open], a[href="#ai-advisor"]');
-    if (t) { e.preventDefault(); open(); }
+// Render tappable answer options under the last bot message.
+function showChips(chips) {
+  clearChips();
+  if (!Array.isArray(chips) || !chips.length) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-bot';
+  const row = document.createElement('div');
+  row.className = 'quick-replies';
+  chips.slice(0, 6).forEach(text => {
+    const btn = document.createElement('button');
+    btn.className = 'qr-btn';
+    btn.textContent = text;
+    btn.onclick = () => { clearChips(); handleSend(text); };
+    row.appendChild(btn);
   });
-  window.SSAdvisor = { open: open, close: close, reset: doReset };
+  wrap.appendChild(row);
+  msgs.appendChild(wrap);
+  chipRow = wrap;
+  msgs.scrollTop = msgs.scrollHeight;
+}
 
-  // This standalone file is a test page. ?open in the URL opens the panel on load so the
-  // conversation can be tested without a click; without it you see the launcher exactly as a
-  // visitor would. The embedded version never auto-opens.
-  if (location.search.indexOf('open') !== -1) open();
+function setInput(enabled) {
+  input.disabled = !enabled;
+  sendBtn.disabled = !enabled;
+  if (enabled) input.focus();
+}
 
-  // ---------- local preview only (data-mock="true"); never ship enabled ----------
-  function mock(p) {
-    return new Promise(function (res) {
-      setTimeout(function () {
-        var lower = p.message.toLowerCase(), reply, cta = [], sug = [];
-        if (/prompt|instruction|notion/.test(lower)) reply = "I can help with Simplified Startup's services and how the team might fit your business, but I can't share internal system information.\n\nIf you're evaluating the advisor itself, I can explain what it can help you with.";
-        else if (/cost|price|how much/.test(lower)) { reply = "Pricing depends on the scope and the team involved, and I don't want to give you an inaccurate number.\n\nIf you tell me a bit about what you're looking to build, I can help you understand what kind of engagement you'd be looking at — and the team can scope it properly in writing."; cta = [{ id: 'consult', label: 'Book a free consultation', url: BOOK_URL, kind: 'link' }]; }
-        else if (/traffic|leads/.test(lower)) { reply = "If you're already getting traffic, the first question I'd look at is where people drop off rather than how to send more.\n\nSimplified Startup works across web, growth, marketing and sales, so the right starting point depends on whether the issue is positioning, conversion, lead capture, or what happens after someone shows interest.\n\nWhat happens today when someone lands on your site and wants to learn more?"; sug = ["There's a contact form nobody fills in", "We don't really know", 'They can book a demo but rarely do']; }
-        else if (/not sure|don't know/.test(lower)) { reply = "Then let's not start with services.\n\nWhat are you trying to accomplish over the next 3–6 months — the outcome, not the tactic?"; sug = ['Get our first paying customers', 'Launch a first version', 'Grow revenue from what we have']; }
-        else { reply = "Got it. Before I point at any particular area, it helps to know where you are: is this pre-launch, early revenue, or something already growing that's hit a wall?\n\nFrom there I can tell you which parts of the problem usually belong together."; cta = [{ id: 'tell_more', label: 'Tell me more about your situation', kind: 'suggest', text: "Here's more detail on my situation: " }]; }
-        res({ state_token: 'mock', reply: reply, cta: cta, suggestions: sug, state: { phase: 'DIAGNOSING', handoff: false, ask_contact: null, closing: false } });
-      }, 900);
-    });
+async function start() {
+  showTyping();
+  try {
+    const res = await fetch(BASE + '/conversation/start', { method: 'POST' });
+    const data = await res.json();
+    sid = data.session_id;
+    removeTyping();
+    addBot(data.message);
+    showChips(OPENING_CHIPS);
+    setInput(true);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter' && !sendBtn.disabled) sendMessage(); });
+  } catch(e) {
+    removeTyping();
+    addBot('Having trouble connecting. Please try again in a moment.');
   }
-})();
+}
 
+async function handleSend(text) {
+  if (!text.trim() || !sid) return;
+  clearChips();
+  input.value = '';
+  setInput(false);
+  addUser(text);
+  showTyping();
+  try {
+    const res = await fetch(BASE + '/conversation/message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sid, message: text })
+    });
+    const data = await res.json();
+    removeTyping();
+    const hasCTA = data.message.toLowerCase().includes('/#book') || data.message.toLowerCase().includes('strategy call');
+    const cleanMsg = data.message.replace(/https?:\/\/simplified-startup-ui\.vercel\.app\/#book/g, '').replace(/simplified-startup-ui\.vercel\.app\/#book/g, '').trim();
+    addBot(cleanMsg, hasCTA);
+    showChips(data.chips);
+  } catch(e) {
+    removeTyping();
+    addBot("Something went wrong. Please try again.");
+  }
+  setInput(true);
+}
+
+function sendMessage() {
+  handleSend(input.value.trim());
+}
+
+function resetChat() {
+  clearChips();
+  msgs.innerHTML = '';
+  sid = null;
+  setInput(false);
+  start();
+}
+
+start();
 </script>
 </body>
 </html>
