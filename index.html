@@ -88,12 +88,12 @@ const input = document.getElementById('msgInput');
 const sendBtn = document.getElementById('sendBtn');
 
 const OPENING_CHIPS = [
-  "I have an idea and don't know where to start",
-  "I need to launch in the next few months",
-  "We get traffic but almost no leads",
-  "Our marketing isn't producing pipeline",
-  "I want to automate something repetitive",
-  "I don't know what to tackle first",
+  "I have an idea but have no idea where to begin",
+  "We get traffic but almost none of it converts",
+  "Our marketing is running but not bringing in leads",
+  "I need to launch something in the next few months",
+  "There are repetitive tasks I want to automate",
+  "I honestly don't know what to tackle first",
 ];
 
 function addBot(text, showCTA) {
@@ -140,6 +140,7 @@ function clearChips() {
 }
 
 // Render tappable answer options under the last bot message.
+// Always appends a "Something else" escape that opens the text box instead of sending.
 function showChips(chips) {
   clearChips();
   if (!Array.isArray(chips) || !chips.length) return;
@@ -154,6 +155,14 @@ function showChips(chips) {
     btn.onclick = () => { clearChips(); handleSend(text); };
     row.appendChild(btn);
   });
+  // "Something else" escape — clears chips and focuses the input so they can type freely.
+  const escape = document.createElement('button');
+  escape.className = 'qr-btn';
+  escape.textContent = 'Something else — let me type it';
+  escape.style.opacity = '0.6';
+  escape.style.fontStyle = 'italic';
+  escape.onclick = () => { clearChips(); input.focus(); };
+  row.appendChild(escape);
   wrap.appendChild(row);
   msgs.appendChild(wrap);
   chipRow = wrap;
@@ -185,7 +194,7 @@ async function start() {
 
 async function handleSend(text) {
   if (!text.trim() || !sid) return;
-  clearChips();
+  clearChips();  // chips clear only when a message is actually sent
   input.value = '';
   setInput(false);
   addUser(text);
