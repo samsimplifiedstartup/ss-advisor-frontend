@@ -144,6 +144,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 const BASE = 'https://web-production-c4d14.up.railway.app';
 let sid = null;
 let chipRow = null;
+let turnNumber = 0;
 
 const msgs = document.getElementById('messages');
 const input = document.getElementById('msgInput');
@@ -300,6 +301,8 @@ async function handleSend(text) {
   setInput(false);
   addUser(text);
   showTyping();
+  turnNumber++;
+  track('message_sent', { turn: turnNumber, session_id: sid });
   try {
     const res = await fetch(BASE + '/conversation/message', {
       method: 'POST',
