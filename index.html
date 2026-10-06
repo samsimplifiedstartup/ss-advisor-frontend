@@ -15,7 +15,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;display:flex;align-items:center;justify-content:center;min-height:100vh}
-.widget{width:420px;height:700px;background:#fff;border-radius:20px;box-shadow:0 8px 48px rgba(0,0,0,.12);display:flex;flex-direction:column;overflow:hidden}
+.widget{width:420px;height:700px;background:#fff;border-radius:20px;box-shadow:0 8px 48px rgba(0,0,0,.12);display:flex;flex-direction:column;overflow:hidden;position:relative}
 .header{padding:18px 20px 16px;border-bottom:1px solid #efefed;display:flex;align-items:center;gap:12px}
 .logo{width:36px;height:36px;background:#1a1a1a;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .logo svg{width:18px;height:18px;fill:#fff}
@@ -55,10 +55,64 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .footer{padding:8px 20px 12px;text-align:center}
 .footer p{font-size:11px;color:#bbb;line-height:1.4}
 .footer a{color:#bbb}
+
+/* Lead capture gate */
+.lead-gate{position:absolute;inset:0;background:#fff;border-radius:20px;display:flex;flex-direction:column;z-index:10}
+.lead-gate-header{padding:28px 28px 0}
+.lead-gate-header h2{font-size:17px;font-weight:700;color:#1a1a1a;line-height:1.3}
+.lead-gate-header p{font-size:13px;color:#888;margin-top:6px;line-height:1.5}
+.lead-gate-body{padding:24px 28px;display:flex;flex-direction:column;gap:14px;flex:1}
+.lead-field{display:flex;flex-direction:column;gap:5px}
+.lead-field label{font-size:12px;font-weight:600;color:#555;letter-spacing:.3px}
+.lead-field input{background:#f5f4f0;border:1.5px solid transparent;border-radius:10px;padding:11px 14px;font-size:14px;color:#1a1a1a;outline:none;transition:border-color .15s}
+.lead-field input:focus{border-color:#1a1a1a}
+.lead-field input.error{border-color:#e74c3c}
+.lead-submit{background:#1a1a1a;color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s;margin-top:4px}
+.lead-submit:hover{opacity:.85}
+.lead-submit:disabled{opacity:.4;cursor:not-allowed}
+.lead-error{font-size:12px;color:#e74c3c;min-height:16px}
+.lead-gate-footer{padding:0 28px 20px;text-align:center}
+.lead-gate-footer p{font-size:11px;color:#bbb;line-height:1.5}
 </style>
 </head>
 <body>
 <div class="widget">
+
+  <!-- Lead capture gate (shown first) -->
+  <div class="lead-gate" id="leadGate">
+    <div class="lead-gate-header">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <div class="logo"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#1a1a1a">Simplified Startup</div>
+          <div style="font-size:11px;color:#aaa">AI Advisor</div>
+        </div>
+      </div>
+      <h2>Get free directional advice, instantly.</h2>
+      <p>Tell us who you are and the AI Advisor will map the fastest path to traction for your business.</p>
+    </div>
+    <div class="lead-gate-body">
+      <div class="lead-field">
+        <label>FULL NAME</label>
+        <input type="text" id="leadName" placeholder="Jane Smith" autocomplete="name" />
+      </div>
+      <div class="lead-field">
+        <label>EMAIL</label>
+        <input type="email" id="leadEmail" placeholder="jane@company.com" autocomplete="email" />
+      </div>
+      <div class="lead-field">
+        <label>MOBILE</label>
+        <input type="tel" id="leadMobile" placeholder="+1 555 000 0000" autocomplete="tel" />
+      </div>
+      <div class="lead-error" id="leadError"></div>
+      <button class="lead-submit" id="leadSubmit" onclick="submitLead()">Start the conversation →</button>
+    </div>
+    <div class="lead-gate-footer">
+      <p>Your information is only used to follow up<br>if you want to take things further.</p>
+    </div>
+  </div>
+
+  <!-- Chat widget (shown after lead captured) -->
   <div class="header">
     <div class="logo">
       <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
@@ -89,11 +143,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <script>
 const BASE = 'https://web-production-c4d14.up.railway.app';
 let sid = null;
-let chipRow = null;   // the currently shown row of tappable options, if any
+let chipRow = null;
 
 const msgs = document.getElementById('messages');
 const input = document.getElementById('msgInput');
 const sendBtn = document.getElementById('sendBtn');
+const leadGate = document.getElementById('leadGate');
 
 const OPENING_CHIPS = [
   "I have an idea but have no idea where to begin",
@@ -104,6 +159,65 @@ const OPENING_CHIPS = [
   "I honestly don't know what to tackle first",
 ];
 
+function track(event, props) {
+  try { if (window.posthog) posthog.capture(event, props || {}); } catch(e) {}
+}
+
+// ── Lead gate ─────────────────────────────────────────────────────────────────
+async function submitLead() {
+  const name = document.getElementById('leadName').value.trim();
+  const email = document.getElementById('leadEmail').value.trim();
+  const mobile = document.getElementById('leadMobile').value.trim();
+  const errorEl = document.getElementById('leadError');
+  const submitBtn = document.getElementById('leadSubmit');
+
+  // Validation
+  errorEl.textContent = '';
+  if (!name) { errorEl.textContent = 'Please enter your name.'; return; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errorEl.textContent = 'Please enter a valid email.'; return; }
+  if (!mobile) { errorEl.textContent = 'Please enter your mobile number.'; return; }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Saving...';
+
+  try {
+    // Start chat session first to get session_id
+    const startRes = await fetch(BASE + '/conversation/start', { method: 'POST' });
+    const startData = await startRes.json();
+    sid = startData.session_id;
+
+    // Save lead to Notion
+    await fetch(BASE + '/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, mobile, session_id: sid })
+    });
+
+    track('lead_captured', { has_name: true, has_email: true, has_mobile: true });
+
+    // Hide gate, show chat
+    leadGate.style.display = 'none';
+    addBot(startData.message);
+    track('chat_opened', { page: location.pathname });
+    showChips(OPENING_CHIPS);
+    setInput(true);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter' && !sendBtn.disabled) sendMessage(); });
+
+  } catch(e) {
+    errorEl.textContent = 'Something went wrong. Please try again.';
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Start the conversation →';
+  }
+}
+
+// Allow Enter key on lead form fields
+['leadName','leadEmail','leadMobile'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitLead();
+  });
+});
+
+// ── Chat ──────────────────────────────────────────────────────────────────────
 function addBot(text, showCTA) {
   const wrap = document.createElement('div');
   wrap.className = 'msg-bot';
@@ -142,13 +256,10 @@ function removeTyping() {
   if (t) t.remove();
 }
 
-// Remove any lingering option row (on tap, or when the user types their own answer).
 function clearChips() {
   if (chipRow) { chipRow.remove(); chipRow = null; }
 }
 
-// Render tappable answer options under the last bot message.
-// Always appends a "Something else" escape that opens the text box instead of sending.
 function showChips(chips) {
   clearChips();
   if (!Array.isArray(chips) || !chips.length) return;
@@ -163,7 +274,6 @@ function showChips(chips) {
     btn.onclick = () => { clearChips(); handleSend(text); };
     row.appendChild(btn);
   });
-  // "Something else" escape — clears chips and focuses the input so they can type freely.
   const escape = document.createElement('button');
   escape.className = 'qr-btn';
   escape.textContent = 'Something else — let me type it';
@@ -183,31 +293,9 @@ function setInput(enabled) {
   if (enabled) input.focus();
 }
 
-function track(event, props) {
-  try { if (window.posthog) posthog.capture(event, props || {}); } catch(e) {}
-}
-
-async function start() {
-  showTyping();
-  try {
-    const res = await fetch(BASE + '/conversation/start', { method: 'POST' });
-    const data = await res.json();
-    sid = data.session_id;
-    removeTyping();
-    addBot(data.message);
-    track('chat_opened', { page: location.pathname });
-    showChips(OPENING_CHIPS);
-    setInput(true);
-    input.addEventListener('keydown', e => { if (e.key === 'Enter' && !sendBtn.disabled) sendMessage(); });
-  } catch(e) {
-    removeTyping();
-    addBot('Having trouble connecting. Please try again in a moment.');
-  }
-}
-
 async function handleSend(text) {
   if (!text.trim() || !sid) return;
-  clearChips();  // chips clear only when a message is actually sent
+  clearChips();
   input.value = '';
   setInput(false);
   addUser(text);
@@ -240,10 +328,8 @@ function resetChat() {
   msgs.innerHTML = '';
   sid = null;
   setInput(false);
-  start();
+  leadGate.style.display = 'flex';
 }
-
-start();
 </script>
 </body>
 </html>
